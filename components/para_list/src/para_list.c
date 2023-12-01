@@ -12,21 +12,23 @@
 PARAMETER_BRUSH brush_para;
 PARAMETER_BLISTER blister_para;
 PARAMETER_REMOTE remote_para;
+PARAMETER_SUCTION_PUMP suction_pump_para;
 PARAMETER_CONNECTION connection_para;
 
 static const char *TAG = "para_list";
 uint8_t FTC533_KEY_press = 0;
 uint32_t time_delay = 25;
 uint8_t twai_status = 0;
-double remote_speed[3]= {0};
+double remote_speed[4]= {0};
+uint8_t robot_h_v[5]={0};
 //char ap_mac_addr[6] = {0};
 uint16_t vehicle_battery = 20000;
 
 
 esp_err_t get_chip_id(uint32_t* chip_id){
     esp_err_t status = ESP_OK;
-    *chip_id = (REG_READ(0x3FF00050) & 0xFF000000) |
-                         (REG_READ(0x3ff0005C) & 0xFFFFFF);
+    *chip_id = 0x3FF00050; //(REG_READ(0x3FF00050) & 0xFF000000) |
+                         //(REG_READ(0x3ff0005C) & 0xFFFFFF);
     return status;
 }
 
@@ -97,6 +99,7 @@ void para_init(void)
             blister_para.rssi = 0;
             blister_para.wifi_connection = 0;
         #else
+            #ifdef DEVICE_TYPE_REMOTE
             //remote_para.uuid = id;
             strcpy(remote_para.uuid,mac_addr);
             remote_para.nozzle = 0;
@@ -110,6 +113,21 @@ void para_init(void)
             strcpy(remote_para.version,"1.0.0.0");
             remote_para.rssi = 0;
             remote_para.wifi_connection = 0;
+            #else
+                #ifdef DEVICE_TYPE_SUCTION_PUMP
+                strcpy(suction_pump_para.uuid,mac_addr);
+                suction_pump_para.status = 1;
+                suction_pump_para.suction[0] = 0;
+                suction_pump_para.suction[1] = 0;
+                suction_pump_para.suction[2] = 0;
+                suction_pump_para.suction[3] = 0;
+                suction_pump_para.timestamp = 1654585625000;
+                strcpy(suction_pump_para.msg_id,"msg_id");
+                strcpy(suction_pump_para.version,"1.0.0.0");
+                suction_pump_para.rssi = 0;
+                suction_pump_para.wifi_connection = 0;
+                #endif   
+            #endif
         #endif
     #endif
     
@@ -332,6 +350,9 @@ return blister_para.water;
 #ifdef DEVICE_TYPE_REMOTE
 return remote_para.water;
 #endif
+#ifdef DEVICE_TYPE_SUCTION_PUMP
+return 0;
+#endif
 }
 
 void parameter_write_pressure_alarm(uint8_t value)
@@ -350,6 +371,9 @@ return blister_para.pressure_alarm;
 #endif
 #ifdef DEVICE_TYPE_REMOTE
 return remote_para.pressure_alarm;
+#endif
+#ifdef DEVICE_TYPE_SUCTION_PUMP
+return 0;
 #endif
 }
 
@@ -379,11 +403,17 @@ void get_remote_parameter(PARAMETER_REMOTE *remote_t)
     memcpy(remote_t,&remote_para,sizeof(PARAMETER_REMOTE));
 }
 
+void get_suction_pump_parameter(PARAMETER_SUCTION_PUMP *rsuction_pump_t)
+{
+    memcpy(rsuction_pump_t,&suction_pump_para,sizeof(PARAMETER_SUCTION_PUMP));
+}
+
 void parameter_write_version(char *str_version)
 {   
     strcpy(brush_para.version,str_version);
     strcpy(blister_para.version,str_version);
     strcpy(remote_para.version,str_version);
+    strcpy(suction_pump_para.version,str_version);
 }
 
 
@@ -397,6 +427,7 @@ void parameter_write_msg_id(char *str_msgid)
     strcpy(brush_para.msg_id,str_msgid);
     strcpy(blister_para.msg_id,str_msgid);
     strcpy(remote_para.msg_id,str_msgid);
+    strcpy(suction_pump_para.msg_id,str_msgid);
 }
 
 
@@ -427,6 +458,11 @@ void parameter_write_timestamp(double timestamp)
     remote_para.time_int = time_int;
     strcpy(remote_para.time_string , time_string);
     #endif
+    #ifdef DEVICE_TYPE_SUCTION_PUMP
+    suction_pump_para.timestamp = timestamp;
+    suction_pump_para.time_int = time_int;
+    strcpy(suction_pump_para.time_string , time_string);
+    #endif
 }
 
 double parameter_read_timestamp(void)
@@ -439,6 +475,9 @@ return blister_para.timestamp;
 #endif
 #ifdef DEVICE_TYPE_REMOTE
 return remote_para.timestamp;
+#endif
+#ifdef DEVICE_TYPE_SUCTION_PUMP
+return suction_pump_para.timestamp;
 #endif
 }
 
@@ -467,6 +506,9 @@ return blister_para.emergency_stop;
 #ifdef DEVICE_TYPE_REMOTE
 return remote_para.emergency_stop;
 #endif
+#ifdef DEVICE_TYPE_SUCTION_PUMP
+return 0;
+#endif
 }
 
 void parameter_write_centralizer(uint8_t value)
@@ -485,6 +527,9 @@ return 0;
 #endif
 #ifdef DEVICE_TYPE_REMOTE
 return remote_para.centralizer;
+#endif
+#ifdef DEVICE_TYPE_SUCTION_PUMP
+return 0;
 #endif
 }
 
@@ -505,6 +550,9 @@ return 0;
 #ifdef DEVICE_TYPE_REMOTE
 return remote_para.rotation;
 #endif
+#ifdef DEVICE_TYPE_SUCTION_PUMP
+return 0;
+#endif
 }
 
 void parameter_write_nozzle(uint8_t value)
@@ -523,6 +571,9 @@ return 0;
 #endif
 #ifdef DEVICE_TYPE_REMOTE
 return remote_para.nozzle;
+#endif
+#ifdef DEVICE_TYPE_SUCTION_PUMP
+return 0;
 #endif
     
 }
@@ -579,12 +630,14 @@ void parameter_write_rssi(int8_t value)
     brush_para.rssi = value; 
     blister_para.rssi = value;
     remote_para.rssi = value;
+    suction_pump_para.rssi = value;
 }
 void parameter_write_wifi_connection(uint8_t value)
 {  
     brush_para.wifi_connection = value; 
     blister_para.wifi_connection = value;
     remote_para.wifi_connection = value;
+    suction_pump_para.wifi_connection = value;
 }
 
 uint8_t parameter_read_wifi_connection(void)
@@ -597,6 +650,9 @@ return blister_para.wifi_connection;
 #endif
 #ifdef DEVICE_TYPE_REMOTE
 return remote_para.wifi_connection;
+#endif
+#ifdef DEVICE_TYPE_SUCTION_PUMP
+return suction_pump_para.wifi_connection;
 #endif
 }
 
@@ -630,13 +686,29 @@ uint8_t parameter_read_twai_status(void)
     return twai_status;
 }
 
-void parameter_write_remote_xyz(double speed_x,double speed_y,double speed_z)
+void parameter_write_remote_xyz(double speed_x,double speed_y,double speed_z,double speed_axes3)
 {
-    remote_speed[0] = -speed_x;  //atof(
-    remote_speed[1] = -speed_y;
+    remote_speed[0] = speed_x;  //atof(
+    remote_speed[1] = speed_y;
     remote_speed[2] = speed_z;    //jiexian  fangxiang
+    remote_speed[3] = speed_axes3; 
 }
 
+void parameter_write_robot_h_v(uint8_t horizontal,uint8_t vertical,uint8_t servo,uint8_t video,uint8_t bakup)
+{
+    robot_h_v[0] = horizontal;
+    robot_h_v[1] = vertical;
+    robot_h_v[2] = servo;
+    robot_h_v[3] = video;
+    robot_h_v[4] = bakup;
+}
+
+// void parameter_write_robot_h_v(uint8_t horizontal,uint8_t vertical,uint8_t servo)
+// {
+//     robot_h_v[0] = horizontal;
+//     robot_h_v[1] = vertical;
+//     robot_h_v[2] = servo;
+// }
 // void parameter_read_remote_xyz(double speed_x,double speed_y,double speed_z)
 // {
 //     speed_x = remote_speed[0];
@@ -663,6 +735,9 @@ uint8_t parameter_read_air_pump(void)
     #endif
     #ifdef DEVICE_TYPE_REMOTE
     return remote_para.air_pump;
+    #endif
+    #ifdef DEVICE_TYPE_SUCTION_PUMP
+    return 0;
     #endif
 }
 
@@ -770,6 +845,20 @@ return blister_para.time_string;
 #ifdef DEVICE_TYPE_REMOTE
 return remote_para.time_string;
 #endif
+#ifdef DEVICE_TYPE_SUCTION_PUMP
+return suction_pump_para.time_string;
+#endif
 }
 
 
+void parameter_write_suction_para(uint8_t str_para[])
+{   
+    //for(uint8_t i=0;i<4;i++)    
+    suction_pump_para.suction[0] = str_para[0];
+
+}
+
+// uint8_t *parameter_read_suction_para(void)
+// {
+//     return suction_pump_para.suction;
+// }

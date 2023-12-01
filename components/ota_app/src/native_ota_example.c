@@ -294,6 +294,7 @@ void version_get(void)
         ESP_LOGI(TAG, "Running firmware version: %s", running_app_info.version);
     }
 }
+
 void native_ota_app(void)
 {
     uint8_t sha_256[HASH_LEN] = { 0 };

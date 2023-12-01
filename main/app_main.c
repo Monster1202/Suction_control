@@ -71,44 +71,42 @@ void app_main(void)
 //MQTT enable     MQTT task priority, default is 5,
     mqtt_init();
     
-    xTaskCreate(airpump_process, "airpump_process", 1024, NULL, 8, NULL);
+//    xTaskCreate(airpump_process, "airpump_process", 1024, NULL, 8, NULL);
     xTaskCreate(log_process, "log_process", 4096, NULL, 3, NULL);
 //uart read/write example without event queue;
     //xTaskCreate(ota_debug_process, "ota_debug_process", 4096, NULL, 12, NULL);
-#ifdef DEVICE_TYPE_BLISTER
-//pressure_read
-    timer_FTC533();
-    xTaskCreate(heater_init_process, "heater_init_process", 4096, NULL, 7, NULL);
-    //heater_init(1);
-    //timer_heater_init();
-#endif
-
-// #ifndef DEVICE_TYPE_REMOTE
-#ifdef GPIOTEST 
-    xTaskCreate(uart485_task, "uart485_task", 4096, NULL, 10, NULL);
-    xTaskCreate(uart232_task, "uart232_task", 4096, NULL, 11, NULL);
-    xTaskCreate(pressure_read, "pressure_read", 4096, NULL, 2, NULL);
-#endif
-#ifdef DEVICE_TYPE_BRUSH  
-    twai_init();
-#endif
-// //DS18B20 task
-//     //xTaskCreate(ds18b20_read, "ds18b20_read", 4096, NULL, 24, NULL);///////23 OK  22 2% ERROR
+// #ifdef DEVICE_TYPE_BLISTER
+// //pressure_read
+//     timer_FTC533();
+//     xTaskCreate(heater_init_process, "heater_init_process", 4096, NULL, 7, NULL);
+//     //heater_init(1);
+//     //timer_heater_init();
 // #endif
-#ifdef mqtt_test
-    xTaskCreate(mqtt_gpio_test, "mqtt_gpio_test", 4096, NULL, 13, NULL);
-#endif
+
+// // #ifndef DEVICE_TYPE_REMOTE
+// #ifdef GPIOTEST 
+//     xTaskCreate(uart485_task, "uart485_task", 4096, NULL, 10, NULL);
+//     xTaskCreate(uart232_task, "uart232_task", 4096, NULL, 11, NULL);
+//     xTaskCreate(pressure_read, "pressure_read", 4096, NULL, 2, NULL);
+// #endif
+// #ifdef DEVICE_TYPE_BRUSH  
+//     twai_init();
+// #endif
+// // //DS18B20 task
+// //     //xTaskCreate(ds18b20_read, "ds18b20_read", 4096, NULL, 24, NULL);///////23 OK  22 2% ERROR
+// // #endif
+// #ifdef mqtt_test
+//     xTaskCreate(mqtt_gpio_test, "mqtt_gpio_test", 4096, NULL, 13, NULL);
+// #endif
     timer_periodic();  //init end beep 
     // printf("configMAX_PRIORITIES:%d",configMAX_PRIORITIES);
     // printf("CONFIG_ESP_SYSTEM_EVENT_QUEUE_SIZE:%d",CONFIG_ESP_SYSTEM_EVENT_QUEUE_SIZE);
     // printf("CONFIG_ESP_SYSTEM_EVENT_TASK_STACK_SIZE:%d",CONFIG_ESP_SYSTEM_EVENT_TASK_STACK_SIZE);
     // printf("CONFIG_ESP_MAIN_TASK_STACK_SIZE:%d",CONFIG_ESP_MAIN_TASK_STACK_SIZE);
-    
+    //gpio_set_level(23, 1);
     uint8_t s_led_state = 0;
     uint8_t wifi_sta = 0;
     uint32_t time_cnt = 0;
-    // int time_int = 0;
-    // char time_string[30] = {0};
     uint8_t nozzle_mode = 0;
     uint8_t air_pressure = 0;
     uint8_t blister_led_state = 0;
@@ -118,39 +116,16 @@ void app_main(void)
         vTaskDelay(200 / portTICK_RATE_MS);
         wifi_sta=parameter_read_wifi_connection();
         time_cnt++;
-        if(wifi_sta>=1){
-            if(time_cnt % (5-wifi_sta) == 1){
-                s_led_state = !s_led_state;
-                gpio_set_level(GPIO_SYS_LED, s_led_state);
-            }
-        }
+        // if(wifi_sta>=1){
+        //     if(time_cnt % (5-wifi_sta) == 1){
+        //         s_led_state = !s_led_state;
+        //         gpio_set_level(GPIO_SYS_LED, s_led_state);
+        //     }
+        // }
         if(time_cnt%100==10){  
             print_heapsize();
-            //time_int = (int)(parameter_read_timestamp()/1000) + 8*60*60; //BEIJING timestamp += 8*60*60;
-            //printf("time_int: %d\n", time_int);
-            //TimeStamp2DateTime(time_int);
-            //stamp_to_standard(time_int,time_string);
-            //printf("time_string: %s\n", time_string);
-           // log_write_send("wifi_sta:%dtime:%s ",wifi_sta,parameter_read_time_string());   //write print
-            // log_write_send("testttt:%.0f",parameter_read_timestamp());
-            // log_read_send('0');  
         }
-        //led blink
-        #ifdef DEVICE_TYPE_BLISTER
-        blister_emergency_state = parameter_read_emergency_stop();
-        if(blister_emergency_state){
-            
-            gpio_set_level(GPIO_OUTPUT_LED_1, time_cnt%2);
-            gpio_set_level(GPIO_OUTPUT_LED_2, time_cnt%2);
-            gpio_set_level(GPIO_OUTPUT_LED_3, time_cnt%2); 
-        }
-        // nozzle_mode = parameter_read_mode();
-        // air_pressure = parameter_read_pressure_alarm();
-        // if( nozzle_mode == 1 && air_pressure == 1)
-        //     gpio_set_level(GPIO_OUTPUT_LED_2, time_cnt%2);
-        // if( nozzle_mode == 2 && air_pressure == 1)
-        //     gpio_set_level(GPIO_OUTPUT_LED_3, time_cnt%2); 
-        #endif   
+
         //printf("wifi_sta: %d\n", wifi_sta);
 
         //test_custom_partition(); 

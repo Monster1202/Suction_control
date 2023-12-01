@@ -14,7 +14,8 @@ extern "C" {
 // #define MQTT_PRIO 5
 // #define PRINTF_LEVEL ESP_LOG_DEBUG
 
-#define DEVICE_TYPE_BRUSH 
+#define DEVICE_TYPE_SUCTION_PUMP 
+//#define DEVICE_TYPE_BRUSH 
 //#define DEVICE_TYPE_BLISTER
 //#define DEVICE_TYPE_REMOTE 
 
@@ -125,7 +126,7 @@ typedef struct
         #define GPIO_INPUT_PIN_SEL  ((1ULL<<GPIO_INPUT_IO_1)|(1ULL<<GPIO_INPUT_IO_2)|(1ULL<<GPIO_INPUT_IO_3)|(1ULL<<GPIO_INPUT_IO_4)|(1ULL<<GPIO_INPUT_IO_5)|(1ULL<<GPIO_INPUT_IO_6)|(1ULL<<GPIO_INPUT_IO_7)|(1ULL<<GPIO_INPUT_IO_STOP))
     #else
         #ifdef DEVICE_TYPE_REMOTE
-        #define CONFIG_EXAMPLE_FIRMWARE_UPG_URL "http://172.16.171.221:8070/remote.bin"
+        #define CONFIG_EXAMPLE_FIRMWARE_UPG_URL "http://10.42.0.245:8070/remote.bin"
 
         #define GPIO_INPUT_IO_1     35
         #define GPIO_INPUT_IO_2     36
@@ -145,6 +146,15 @@ typedef struct
         #define GPIO_OUTPUT_PIN_SEL  ((1ULL<<GPIO_SYS_LED) |(1ULL<<GPIO_BEEP) | (1ULL<<GPIO_OUTPUT_LED_1)| (1ULL<<GPIO_OUTPUT_LED_2)| (1ULL<<GPIO_OUTPUT_LED_3)| (1ULL<<GPIO_OUTPUT_LED_4)| (1ULL<<GPIO_OUTPUT_LED_5)| (1ULL<<GPIO_OUTPUT_LED_6))  
         #define GPIO_INPUT_PIN_SEL  ((1ULL<<GPIO_INPUT_IO_1)|(1ULL<<GPIO_INPUT_IO_2)|(1ULL<<GPIO_INPUT_IO_3)|(1ULL<<GPIO_INPUT_IO_4)|(1ULL<<GPIO_INPUT_IO_5)|(1ULL<<GPIO_INPUT_IO_6)|(1ULL<<GPIO_INPUT_IO_7)|(1ULL<<GPIO_INPUT_IO_STOP))
         #define mqtt_test
+        #else
+            #ifdef DEVICE_TYPE_SUCTION_PUMP
+            #define CONFIG_EXAMPLE_FIRMWARE_UPG_URL "http://10.42.0.245:8070/suction.bin"
+            #define GPIO_OUTPUT_1         32
+            #define GPIO_OUTPUT_2         33
+            #define GPIO_OUTPUT_3         25
+            #define GPIO_OUTPUT_4         26
+            #define GPIO_OUTPUT_PIN_SEL  ((1ULL<<GPIO_OUTPUT_1)| (1ULL<<GPIO_OUTPUT_2)| (1ULL<<GPIO_OUTPUT_3)| (1ULL<<GPIO_OUTPUT_4))  
+            #endif
         #endif
     #endif
 #endif
@@ -269,6 +279,20 @@ typedef struct
     char time_string[20];
 }PARAMETER_REMOTE;
 
+typedef struct
+{
+    uint8_t status;     //status upload
+    int8_t rssi;
+    uint8_t wifi_connection; 
+    uint8_t suction[4];
+    int time_int;
+    double timestamp;
+    char uuid[6];//uint32_t uuid;
+    char msg_id[30];
+    char version[30];
+    char time_string[20];
+}PARAMETER_SUCTION_PUMP;
+
 void parameter_write_version(char *str_version);
 void get_parameter(PARAMETER_BRUSH *brush_t);
 void get_blister_parameter(PARAMETER_BLISTER *blister_t);
@@ -311,8 +335,10 @@ void parameter_write_twai_status(uint8_t value);
 uint8_t parameter_read_twai_status(void);
 
 //void parameter_write_remote_xyz(char *speed_x,char *speed_y,char *speed_z);
-void parameter_write_remote_xyz(double speed_x,double speed_y,double speed_z);
+void parameter_write_remote_xyz(double speed_x,double speed_y,double speed_z,double speed_axes3);
 //void parameter_read_remote_xyz(double speed_x,double speed_y,double speed_z);
+void parameter_write_robot_h_v(uint8_t horizontal,uint8_t vertical,uint8_t servo,uint8_t video,uint8_t bakup);
+
 
 void parameter_write_wifi_bssid(uint8_t str_para[]);
 char *parameter_read_wifi_bssid(void);
@@ -321,6 +347,9 @@ uint8_t parameter_read_wifi_bssid_set(void);
 
 void parameter_write_vehicle_battery(uint16_t bat);
 uint16_t parameter_read_vehicle_battery(void);
+
+void parameter_write_suction_para(uint8_t str_para[]);
+char *parameter_read_suction_para(void);
 
 typedef struct times
 {
@@ -348,6 +377,7 @@ ST_DATE_TIME TimeStamp2DateTime(uint32_t Stamp);
 
 
 char *parameter_read_time_string(void);
+void get_suction_pump_parameter(PARAMETER_SUCTION_PUMP *rsuction_pump_t);
 
 #ifdef __cplusplus
 }

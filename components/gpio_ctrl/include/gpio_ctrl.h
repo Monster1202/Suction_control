@@ -52,6 +52,7 @@ void nozzle_io_out(uint8_t value);
 #endif
 uint8_t factory_test_gpio(uint8_t io_num,uint8_t state);
 void factory_test_gpio_init_on(void);
+void suction_control(uint8_t value);
 
 #ifdef __cplusplus
 }
